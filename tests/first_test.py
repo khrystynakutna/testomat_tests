@@ -24,6 +24,16 @@ def test_search_project(page: Page):
     expect(page.locator("ul li h3", has_text=target_project)).to_be_visible()
     expect(page.locator(selector="ul li h3").filter(has_text=target_project)).to_be_visible()
 
+def test_open_free_project(page: Page):
+    page.goto('https://app.testomat.io/users/sign_in')
+    login_user(page, email="khrystynakutna.fa@gmail.com", password="k638Ln!r!2QucYT")
+    page.locator("#company_id").click()
+    page.locator("#company_id").select_option("Free Projects")
+
+    target_project = "python manufacture"
+    search_for_project(page, target_project)
+    expect(page.get_by_role("heading", name=target_project)).to_be_hidden()
+
 def login_user(page: Page, email: str, password: str):
     page.locator("#content-desktop #user_email").fill(email)
     page.locator("#content-desktop #user_password").fill(password)
