@@ -1,7 +1,7 @@
 from playwright.sync_api import Page, expect
 
 
-def login_with_invalid_creds(page: Page):
+def test_login_with_invalid_creds(page: Page):
     page.goto('https://testomat.io/')
     expect(page).to_have_title("AI Test Management Tool | Testomat.io")
     expect(page.get_by_text("Log in", exact=True)).to_be_visible()
@@ -11,3 +11,18 @@ def login_with_invalid_creds(page: Page):
     page.get_by_role("button", name="Sign In").click()
     expect(page.locator("#content-desktop").get_by_text("Invalid Email or password.")).to_be_visible()
     expect(page.locator("#content-desktop .common-flash-info")).to_have_text("Invalid email or password.")
+
+def test_search_project(page: Page):
+    page.goto('https://testomat.io/')
+    page.get_by_text("Log in", exact=True).click()
+    page.locator("#content-desktop #user_email").fill("khrystynakutna.fa@gmail.com")
+    page.locator("#content-desktop #user_password").fill("k638Ln!r!2QucYT")
+    page.get_by_role("button", name="Sign In").click()
+
+    target_project = "python manufacture"
+    expect(page.get_by_role("searchbox", name="Search")).to_be_visible()
+    page.locator("#content-desktop #search").fill(target_project)
+
+    expect(page.get_by_role("heading", name=target_project)).to_be_visible()
+    expect(page.locator("ul li h3", has_text=target_project)).to_be_visible()
+    expect(page.locator(selector="ul li h3").filter(has_text=target_project)).to_be_visible()
