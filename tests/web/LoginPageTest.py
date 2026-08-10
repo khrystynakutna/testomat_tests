@@ -1,7 +1,8 @@
 
 from faker import Faker
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 
+from components.PageCard import Badges, PageCard
 from src.web.pages.HomePage import HomePage
 from src.web.pages.LoginPage import LoginPage
 from src.web.pages.ProjectsPage import ProjectsPage
