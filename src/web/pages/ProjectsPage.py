@@ -1,6 +1,6 @@
 from playwright.sync_api import expect
 
-from components.PageCard import PageCard
+from src.web.components.PageCard import PageCard
 
 
 class ProjectsPage:

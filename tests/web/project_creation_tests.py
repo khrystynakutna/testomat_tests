@@ -1,9 +1,9 @@
 from faker import Faker
 from playwright.sync_api import Page
 
-from components.SideBar import SideBar
-from pages.NewProjectsPage import NewProjectsPage
-from pages.ProjectPage import ProjectPage
+from src.web.components.SideBar import SideBar
+from src.web.pages.NewProjectsPage import NewProjectsPage
+from src.web.pages.ProjectPage import ProjectPage
 
 
 def test_new_project_creation(page:Page, login):

@@ -5,7 +5,7 @@ import pytest
 from dotenv import load_dotenv
 from playwright.sync_api import Page
 
-from pages.LoginPage import LoginPage
+from src.web.pages.LoginPage import LoginPage
 
 load_dotenv()
 

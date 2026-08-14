@@ -1,9 +1,8 @@
 
 from playwright.sync_api import Page
 
-from components.PageCard import Badges
-
-from pages.ProjectsPage import ProjectsPage
+from src.web.components.PageCard import PageCard, Badges
+from src.web.pages.ProjectsPage import ProjectsPage
 
 
 def test_project_card(page: Page, login):
