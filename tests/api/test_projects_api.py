@@ -1,23 +1,12 @@
-import os
 from uuid import uuid4
 
 import pytest
-from dotenv import load_dotenv
 
-from src.api import TestomatClient as ApiClient
-
-
-load_dotenv()
 
 TARGET_PROJECT_TITLE = "python manufacture"
 
 
-@pytest.fixture(scope="module")
-def api_client():
-    return ApiClient(api_token=os.getenv("TESTOMAT_API_TOKEN"))
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture
 def projects(api_client):
     payload = api_client.get_projects()
 
@@ -27,7 +16,7 @@ def projects(api_client):
     return project_items
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def project_id(projects):
     for project in projects:
         if not isinstance(project, dict):

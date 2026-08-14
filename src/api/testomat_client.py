@@ -1,7 +1,11 @@
 from typing import Any
 from urllib.parse import quote
 
-import requests
+from playwright.sync_api import (
+    APIRequestContext,
+    APIResponse,
+    Error as PlaywrightError,
+)
 
 
 class TestomatConfigurationError(ValueError):
@@ -20,9 +24,9 @@ class TestomatClient:
     def __init__(
         self,
         api_token: str | None,
+        request_context: APIRequestContext,
         base_url: str = DEFAULT_BASE_URL,
         timeout: float = 10.0,
-        session: requests.Session | None = None,
     ) -> None:
         if not api_token or not api_token.strip():
             raise TestomatConfigurationError(
@@ -31,19 +35,18 @@ class TestomatClient:
             )
 
         self._api_token = api_token.strip()
+        self._request_context = request_context
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
-        self._session = session or requests.Session()
         self._jwt: str | None = None
 
     def authenticate(self) -> str:
         """Exchange the general API token for a JWT used by user API requests."""
-        response = self._session.post(
-            f"{self._base_url}/api/login",
-            json={"api_token": self._api_token},
-            timeout=self._timeout,
+        response = self._fetch(
+            "POST",
+            "/api/login",
+            data={"api_token": self._api_token},
         )
-        response.raise_for_status()
 
         payload = self._decode_object(response, "Login")
         jwt = payload.get("jwt")
@@ -53,7 +56,6 @@ class TestomatClient:
             )
 
         self._jwt = jwt.strip()
-        self._session.headers.update({"Authorization": f"Bearer {self._jwt}"})
         return self._jwt
 
     def get_projects(self) -> dict[str, Any]:
@@ -71,7 +73,7 @@ class TestomatClient:
         response = self._request(
             "POST",
             f"/api/{self._segment(project_id)}/suites",
-            json={
+            data={
                 "data": {
                     "type": "suites",
                     "attributes": {"title": title},
@@ -105,7 +107,7 @@ class TestomatClient:
         response = self._request(
             "POST",
             f"/api/{self._segment(project_id)}/tests",
-            json={
+            data={
                 "data": {
                     "type": "tests",
                     "attributes": attributes,
@@ -134,17 +136,37 @@ class TestomatClient:
         method: str,
         path: str,
         **kwargs: Any,
-    ) -> requests.Response:
+    ) -> APIResponse:
         if self._jwt is None:
             self.authenticate()
 
-        response = self._session.request(
-            method,
-            f"{self._base_url}{path}",
-            timeout=self._timeout,
-            **kwargs,
-        )
-        response.raise_for_status()
+        headers = dict(kwargs.pop("headers", {}))
+        headers["Authorization"] = f"Bearer {self._jwt}"
+        return self._fetch(method, path, headers=headers, **kwargs)
+
+    def _fetch(
+        self,
+        method: str,
+        path: str,
+        **kwargs: Any,
+    ) -> APIResponse:
+        try:
+            response = self._request_context.fetch(
+                f"{self._base_url}{path}",
+                method=method,
+                timeout=self._timeout * 1000,
+                **kwargs,
+            )
+        except PlaywrightError as error:
+            raise TestomatResponseError(
+                f"{method} {path} failed: {error}"
+            ) from error
+
+        if not response.ok:
+            raise TestomatResponseError(
+                f"{method} {path} returned HTTP {response.status} "
+                f"{response.status_text}."
+            )
         return response
 
     @staticmethod
@@ -155,7 +177,7 @@ class TestomatClient:
 
     @staticmethod
     def _decode_object(
-        response: requests.Response,
+        response: APIResponse,
         response_name: str,
     ) -> dict[str, Any]:
         try:

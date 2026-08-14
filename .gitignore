@@ -8,6 +8,7 @@ __pycache__/
 .idea/
 
 test-results/
+test-result/traces/
 playwright-report/
 blob-report/
 

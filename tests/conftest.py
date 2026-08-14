@@ -30,3 +30,11 @@ def login(page: Page, configs: Config):
     login_page.open_login_page()
     login_page.is_loaded()
     login_page.login(configs.email, configs.password)
+
+
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Expose each test phase report to failure-aware fixtures."""
+    outcome = yield
+    report = outcome.get_result()
+    setattr(item, f"rep_{report.when}", report)
